@@ -237,36 +237,56 @@ const makeStyles = (C) => ({
     textAlign: "left",
   },
   modeButton: {
-    background: C.surfaceHi,
+    background: C.bg === LIGHT.bg ? "#EDF5FF" : C.surfaceHi,
     border: `1px solid ${C.border}`,
-    borderRadius: 10,
-    color: C.textPri,
+    borderRadius: 12,
+    color: C.bg === LIGHT.bg ? "#102A43" : C.textPri,
     cursor: "pointer",
-    padding: "18px 16px",
+    padding: "22px 20px",
     textAlign: "left",
     transition: "border-color 0.2s, transform 0.2s, background 0.2s",
   },
   modeButtonAccent: {
     color: C.accent,
     fontFamily: mono,
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: 700,
     letterSpacing: "0.08em",
     marginBottom: 8,
   },
-  modeButtonTitle: { fontSize: 15, fontWeight: 600, marginBottom: 6 },
-  modeButtonDescription: { color: C.textSec, fontSize: 12, lineHeight: 1.5 },
-  modeAnalysis: { background: "#EDF5FF", borderColor: "#C7DEFA" },
-  modeManager: { background: "#FFF4E7", borderColor: "#FFE0BA" },
+  modeManagerAccent: { color: C.yellow },
+  modeButtonTitle: {
+    color: C.bg === LIGHT.bg ? "#102A43" : C.textPri,
+    fontSize: 18,
+    fontWeight: 800,
+    lineHeight: 1.2,
+    marginBottom: 8,
+  },
+  modeButtonDescription: {
+    color: C.bg === LIGHT.bg ? "#4B6780" : C.textMid,
+    fontSize: 14,
+    fontWeight: 500,
+    lineHeight: 1.55,
+  },
+  modeAnalysis: {
+    background: C.bg === LIGHT.bg ? "#EDF5FF" : "#182D50",
+    borderColor: C.bg === LIGHT.bg ? "#C7DEFA" : "#315B93",
+  },
+  modeManager: {
+    background: C.bg === LIGHT.bg ? "#FFF4E7" : "#352B22",
+    borderColor: C.bg === LIGHT.bg ? "#FFE0BA" : "#80572B",
+  },
   welcomeTitle: {
-    fontSize: 30,
-    fontWeight: 700,
+    fontSize: 38,
+    fontWeight: 800,
     letterSpacing: "-0.04em",
     margin: "0 0 10px",
     color: C.textPri,
   },
   welcomeDesc: {
     color: C.textMid,
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: 500,
     lineHeight: 1.7,
     margin: "0 auto 28px",
     maxWidth: 430,
@@ -1464,6 +1484,66 @@ function AgentDetail({ agentId, C, S, onBack, onOpenCall }) {
   );
 }
 
+function WelcomeChooser({ C, S, onAgent, onManager }) {
+  return (
+    <main style={S.welcome}>
+      <div style={S.welcomeBackdrop} aria-hidden="true">
+        <div style={{ ...S.motionTrack, ...S.motionTrackTop }} />
+        <div style={{ ...S.motionTrack, ...S.motionTrackBottom }} />
+        <div style={{ ...S.motionRing, ...S.motionRingInner }} />
+        <div style={S.motionRing} />
+        <span style={{ ...S.motionText, ...S.motionTextOne }}>
+          VOICE / SIGNAL / INSIGHT
+        </span>
+        <span style={{ ...S.motionText, ...S.motionTextTwo }}>
+          CALL_001 // READY
+        </span>
+        <span style={{ ...S.motionText, ...S.motionTextThree }}>
+          TRANSCRIBE → ANALYZE → IMPROVE
+        </span>
+      </div>
+      <div style={S.welcomeCard}>
+        <div style={S.emptyIcon}>📞</div>
+        <h1 style={S.welcomeTitle}>Welcome to CallIQ</h1>
+        <p style={S.welcomeDesc}>
+          What would you like to do today?
+          <br />
+          Choose the workspace that matches your role.
+        </p>
+        <div style={S.welcomeModes}>
+          <button
+            style={{ ...S.modeButton, ...S.modeAnalysis }}
+            onClick={onAgent}
+          >
+            <div style={S.modeButtonAccent}>FOR AGENTS</div>
+            <div style={S.modeButtonTitle}>Agent View</div>
+            <div style={S.modeButtonDescription}>
+              Review a customer call, understand what happened, and get clear
+              coaching for your next conversation.
+            </div>
+            <div style={{ color: C.accent, fontSize: 20, marginTop: 14 }}>→</div>
+          </button>
+          <button
+            style={{ ...S.modeButton, ...S.modeManager }}
+            onClick={onManager}
+          >
+            <div style={{ ...S.modeButtonAccent, ...S.modeManagerAccent }}>FOR MANAGERS</div>
+            <div style={S.modeButtonTitle}>Manager View</div>
+            <div style={S.modeButtonDescription}>
+              See team performance, find coaching opportunities, and follow up
+              on the calls that need attention.
+            </div>
+            <div style={{ color: C.yellow, fontSize: 20, marginTop: 14 }}>→</div>
+          </button>
+        </div>
+        <div style={{ color: C.textMid, fontSize: 12, fontWeight: 600, marginTop: 22 }}>
+          You can switch views at any time from the top navigation.
+        </div>
+      </div>
+    </main>
+  );
+}
+
 // ── Main App ──────────────────────────────────────────────────────
 export default function App() {
   const [isDark, setIsDark] = useState(true);
@@ -1488,6 +1568,7 @@ export default function App() {
   const [agentId, setAgentId] = useState("");
   const [managerAgentId, setManagerAgentId] = useState(null);
   const [managerCall, setManagerCall] = useState(null);
+  const [welcomeChoice, setWelcomeChoice] = useState(null);
   const inputRef = useRef();
 
   useEffect(() => {
@@ -1501,6 +1582,7 @@ export default function App() {
     const onPopState = () => {
       const path = window.location.pathname;
       setPage(path === "/manager" ? "manager" : path === "/analysis" ? "analysis" : "welcome");
+      setWelcomeChoice(null);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -1510,9 +1592,12 @@ export default function App() {
     const path = nextPage === "manager" ? "/manager" : "/analysis";
     window.history.pushState({}, "", path);
     setPage(nextPage);
+    setWelcomeChoice(nextPage === "analysis" ? "agent" : null);
     setManagerAgentId(null);
     setManagerCall(null);
   };
+
+  const showWelcome = page === "welcome" || (page === "analysis" && !file && !welcomeChoice);
 
   const handleFile = (f) => {
     if (!f) return;
@@ -1568,7 +1653,7 @@ export default function App() {
         <div style={S.logo}>
           <span style={S.logoAccent}>Call</span>IQ
         </div>
-        {page !== "welcome" && (
+        {!showWelcome && (
           <div style={S.nav}>
             <button
               style={S.navButton(page === "analysis")}
@@ -1599,37 +1684,13 @@ export default function App() {
 
       <style>{`@keyframes workspaceReveal{0%{opacity:0;transform:translate3d(0,24px,-80px) rotateX(7deg)}100%{opacity:1;transform:translate3d(0,0,0) rotateX(0)}}@keyframes trackSweep{0%,100%{opacity:.25;transform:translateX(-3%) rotate(-12deg)}50%{opacity:.8;transform:translateX(3%) rotate(-12deg)}}@keyframes textDrift{0%,100%{transform:translate3d(0,0,0);opacity:.25}50%{transform:translate3d(24px,-10px,0);opacity:.7}}@keyframes ringTurn{from{transform:translate(-50%,-50%) rotateX(62deg) rotateZ(-18deg)}to{transform:translate(-50%,-50%) rotateX(62deg) rotateZ(342deg)}}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}@media (max-width:600px){.welcome-card{padding:32px 20px 36px!important}}`}</style>
 
-      {page === "welcome" ? (
-        <main style={S.welcome}>
-          <div style={S.welcomeBackdrop} aria-hidden="true">
-            <div style={{ ...S.motionTrack, ...S.motionTrackTop }} />
-            <div style={{ ...S.motionTrack, ...S.motionTrackBottom }} />
-            <div style={{ ...S.motionRing, ...S.motionRingInner }} />
-            <div style={S.motionRing} />
-            <span style={{ ...S.motionText, ...S.motionTextOne }}>VOICE / SIGNAL / INSIGHT</span>
-            <span style={{ ...S.motionText, ...S.motionTextTwo }}>CALL_001 // READY</span>
-            <span style={{ ...S.motionText, ...S.motionTextThree }}>TRANSCRIBE → ANALYZE → IMPROVE</span>
-          </div>
-          <div style={S.welcomeCard}>
-            <div style={S.emptyIcon}>📞</div>
-            <h1 style={S.welcomeTitle}>Welcome to CallIQ</h1>
-            <p style={S.welcomeDesc}>
-              Choose a workspace to understand individual customer interactions or team performance.
-            </p>
-            <div style={S.welcomeModes}>
-              <button style={{ ...S.modeButton, ...S.modeAnalysis }} onClick={() => navigate("analysis")}>
-                <div style={S.modeButtonAccent}>01 / CALL-LEVEL INTELLIGENCE</div>
-                <div style={S.modeButtonTitle}>Call Analysis</div>
-                <div style={S.modeButtonDescription}>Upload a recording and review sentiment, CSAT, FCR, and coaching signals.</div>
-              </button>
-              <button style={{ ...S.modeButton, ...S.modeManager }} onClick={() => navigate("manager")}>
-                <div style={S.modeButtonAccent}>02 / MANAGER-LEVEL INTELLIGENCE</div>
-                <div style={S.modeButtonTitle}>Manager Dashboard</div>
-                <div style={S.modeButtonDescription}>Compare agent performance, review call history, and find recurring coaching needs.</div>
-              </button>
-            </div>
-          </div>
-        </main>
+      {showWelcome ? (
+        <WelcomeChooser
+          C={C}
+          S={S}
+          onAgent={() => navigate("analysis")}
+          onManager={() => navigate("manager")}
+        />
       ) : page === "manager" ? (
         managerCall ? (
           <main style={S.main}>
