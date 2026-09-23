@@ -1,0 +1,19 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+a__pycache__/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+call-analytics-ui/node_modules/
+call-analytics-ui/build/
+
+# Local audio recordings
+sample_calls/*
+!sample_calls/.gitkeep
