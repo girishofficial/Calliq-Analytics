@@ -11,6 +11,28 @@ Call Analytics turns customer call recordings into transcripts and quality insig
 - Shows talk ratio and sentiment over time
 - Provides agent strengths, improvement areas, and coaching notes
 
+## Screenshots
+
+### Welcome page
+
+![CallIQ welcome page](media/Welcome_page.png)
+
+### Call analysis
+
+![CallIQ call analysis](media/image2.png)
+
+### Manager dashboard
+
+![CallIQ manager dashboard](media/manger1.png)
+
+### Agent performance
+
+![CallIQ agent performance](media/manger2.png)
+
+### Call history
+
+![CallIQ call history](media/image4.png)
+
 ## Project structure
 
 ```text
