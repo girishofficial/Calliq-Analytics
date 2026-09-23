@@ -25,7 +25,6 @@ Call Analytics turns customer call recordings into transcripts and quality insig
 
 ![CallIQ manager dashboard](media/manger1.png)
 
-### Agent performance
 
 ![CallIQ agent performance](media/manger2.png)
 
