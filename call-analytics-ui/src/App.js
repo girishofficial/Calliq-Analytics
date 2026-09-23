@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -23,27 +23,36 @@ const DARK = {
   textPri: "#F1F5F9",
   textSec: "#64748B",
   textMid: "#94A3B8",
+  sidebarBg: "#141929",
+  sidebarSurface: "#1C2438",
+  sidebarBorder: "#1E2D4A",
+  sidebarText: "#F1F5F9",
+  sidebarMuted: "#94A3B8",
   toggleBg: "#1C2438",
   toggleIcon: "☀️",
   toggleLabel: "Light mode",
 };
 
-// RingCentral brand: blue #0684bc, orange #ff7a00
 const LIGHT = {
-  bg: "#F0F4F8",
+  bg: "#F5F9FD",
   surface: "#FFFFFF",
-  surfaceHi: "#EBF4FA",
-  border: "#C9DFF0",
-  accent: "#0684bc",
-  accentLo: "#D0EAF5",
-  accentGlow: "rgba(6,132,188,0.10)",
-  green: "#0a7c5c",
-  yellow: "#b45309",
+  surfaceHi: "#EDF5FF",
+  border: "#D8E7F5",
+  accent: "#1769E8",
+  accentLo: "#DCEBFF",
+  accentGlow: "rgba(23,105,232,0.12)",
+  green: "#0B9B70",
+  yellow: "#F58220",
   red: "#DC2626",
-  textPri: "#0C1929",
-  textSec: "#4A6375",
-  textMid: "#2D5068",
-  toggleBg: "#EBF4FA",
+  textPri: "#102A43",
+  textSec: "#607B94",
+  textMid: "#31536F",
+  sidebarBg: "#0E315A",
+  sidebarSurface: "#174675",
+  sidebarBorder: "#2A5A88",
+  sidebarText: "#FFFFFF",
+  sidebarMuted: "#B8D0E7",
+  toggleBg: "#EDF5FF",
   toggleIcon: "🌙",
   toggleLabel: "Dark mode",
 };
@@ -118,12 +127,13 @@ const makeStyles = (C) => ({
   },
   sidebar: {
     width: 280,
-    borderRight: `1px solid ${C.border}`,
+    borderRight: `1px solid ${C.sidebarBorder}`,
     padding: 24,
     display: "flex",
     flexDirection: "column",
     gap: 24,
-    background: C.surface,
+    background: C.sidebarBg,
+    color: C.sidebarText,
     transition: "background 0.25s, border-color 0.25s",
   },
   main: {
@@ -209,7 +219,7 @@ const makeStyles = (C) => ({
     animationDirection: "reverse",
   },
   welcomeCard: {
-    width: "min(100%, 560px)",
+    width: "min(100%, 680px)",
     textAlign: "center",
     background: C.surface,
     border: `1px solid ${C.border}`,
@@ -219,6 +229,34 @@ const makeStyles = (C) => ({
     position: "relative",
     zIndex: 1,
   },
+  welcomeModes: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 12,
+    marginTop: 30,
+    textAlign: "left",
+  },
+  modeButton: {
+    background: C.surfaceHi,
+    border: `1px solid ${C.border}`,
+    borderRadius: 10,
+    color: C.textPri,
+    cursor: "pointer",
+    padding: "18px 16px",
+    textAlign: "left",
+    transition: "border-color 0.2s, transform 0.2s, background 0.2s",
+  },
+  modeButtonAccent: {
+    color: C.accent,
+    fontFamily: mono,
+    fontSize: 10,
+    letterSpacing: "0.08em",
+    marginBottom: 8,
+  },
+  modeButtonTitle: { fontSize: 15, fontWeight: 600, marginBottom: 6 },
+  modeButtonDescription: { color: C.textSec, fontSize: 12, lineHeight: 1.5 },
+  modeAnalysis: { background: "#EDF5FF", borderColor: "#C7DEFA" },
+  modeManager: { background: "#FFF4E7", borderColor: "#FFE0BA" },
   welcomeTitle: {
     fontSize: 30,
     fontWeight: 700,
@@ -250,6 +288,7 @@ const makeStyles = (C) => ({
   }),
   uploadIcon: { fontSize: 28, marginBottom: 10 },
   uploadLabel: { fontSize: 13, color: C.textMid, lineHeight: 1.6 },
+  sidebarUploadLabel: { fontSize: 13, color: C.sidebarMuted, lineHeight: 1.6 },
   uploadBtn: {
     marginTop: 14,
     width: "100%",
@@ -272,18 +311,18 @@ const makeStyles = (C) => ({
     wordBreak: "break-all",
   },
   infoBlock: {
-    background: C.surfaceHi,
+    background: C.sidebarSurface,
     borderRadius: 8,
     padding: 14,
     fontSize: 12,
-    color: C.textSec,
+    color: C.sidebarMuted,
     lineHeight: 1.7,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${C.sidebarBorder}`,
   },
   infoTitle: {
     fontSize: 11,
     fontFamily: mono,
-    color: C.textMid,
+    color: C.sidebarText,
     marginBottom: 8,
     letterSpacing: "0.05em",
   },
@@ -453,6 +492,101 @@ const makeStyles = (C) => ({
     padding: "2px 8px",
     borderRadius: 4,
   }),
+  nav: {
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: 28,
+    position: "absolute",
+    left: "50%",
+    transform: "translateX(-50%)",
+  },
+  navButton: (active) => ({
+    border: "none",
+    borderRadius: 6,
+    padding: "7px 10px",
+    background: active ? C.accentLo : "transparent",
+    color: active ? C.textPri : C.textSec,
+    cursor: "pointer",
+    fontFamily: mono,
+    fontSize: 11,
+  }),
+  managerHeader: {
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 20,
+    marginBottom: 24,
+  },
+  pageKicker: {
+    color: C.accent,
+    fontFamily: mono,
+    fontSize: 11,
+    letterSpacing: "0.08em",
+    marginBottom: 8,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 700,
+    margin: 0,
+    letterSpacing: "-0.04em",
+  },
+  managerGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(5, 1fr)",
+    gap: 14,
+    marginBottom: 24,
+  },
+  managerTable: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
+  tableHead: {
+    color: C.textSec,
+    fontFamily: mono,
+    fontSize: 10,
+    letterSpacing: "0.05em",
+    textAlign: "left",
+  },
+  tableCell: {
+    borderTop: `1px solid ${C.border}`,
+    color: C.textMid,
+    padding: "14px 8px 14px 0",
+  },
+  tableButton: {
+    background: "transparent",
+    border: "none",
+    color: C.textPri,
+    cursor: "pointer",
+    fontSize: 13,
+    padding: 0,
+    textAlign: "left",
+  },
+  filterRow: { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 },
+  select: {
+    background: C.surfaceHi,
+    border: `1px solid ${C.border}`,
+    borderRadius: 6,
+    color: C.textMid,
+    fontFamily: mono,
+    fontSize: 11,
+    padding: "8px 10px",
+  },
+  detailBack: {
+    background: "transparent",
+    border: "none",
+    color: C.accent,
+    cursor: "pointer",
+    fontFamily: mono,
+    fontSize: 11,
+    padding: 0,
+  },
+  insightButton: {
+    background: "transparent",
+    border: "none",
+    color: C.textPri,
+    cursor: "pointer",
+    fontSize: 13,
+    padding: 0,
+    textAlign: "left",
+  },
 });
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -867,6 +1001,469 @@ function Dashboard({ data, C, S }) {
   );
 }
 
+function ManagerDashboard({ C, S, onOpenAgent, onOpenCall }) {
+  const [overview, setOverview] = useState(null);
+  const [agents, setAgents] = useState([]);
+  const [calls, setCalls] = useState([]);
+  const [coaching, setCoaching] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [filters, setFilters] = useState({
+    agent_id: "",
+    sentiment: "",
+    fcr: "",
+    min_qa: "",
+    from: "",
+    to: "",
+  });
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/manager/overview").then((res) => res.json()),
+      fetch("/api/manager/agents").then((res) => res.json()),
+      fetch("/api/manager/coaching").then((res) => res.json()),
+    ]).then(([overviewData, agentData, coachingData]) => {
+      setOverview(overviewData);
+      setAgents(agentData);
+      setCoaching(coachingData);
+    });
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(
+      ([key, value]) => value && params.set(key, value),
+    );
+    fetch(`/api/manager/calls?${params.toString()}`)
+      .then((res) => res.json())
+      .then(setCalls);
+  }, [filters]);
+
+  const updateFilter = (key, value) =>
+    setFilters((current) => ({ ...current, [key]: value }));
+  const toggleCategory = (category) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null);
+      return;
+    }
+    setSelectedCategory(category);
+  };
+
+  if (!overview)
+    return <LoadingPulse step="Loading manager dashboard..." C={C} />;
+
+  return (
+    <main style={S.main}>
+      <div style={S.managerHeader}>
+        <div>
+          <div style={S.pageKicker}>CALLIQ / MANAGER DASHBOARD</div>
+          <h1 style={S.pageTitle}>Performance at a glance</h1>
+        </div>
+        <div style={{ color: C.textSec, fontFamily: mono, fontSize: 11 }}>
+          Stored call intelligence
+        </div>
+      </div>
+
+      <div style={S.managerGrid}>
+        <StatCard
+          S={S}
+          label="CALLS ANALYZED"
+          value={overview.calls_analyzed}
+          sub="all time"
+        />
+        <StatCard
+          S={S}
+          label="AVERAGE QA SCORE"
+          value={`${overview.average_qa_score}%`}
+          color={scoreColor(overview.average_qa_score / 10, C)}
+          sub="quality score"
+        />
+        <StatCard
+          S={S}
+          label="AVERAGE CSAT"
+          value={`${overview.average_csat}/5`}
+          color={csatColor(overview.average_csat, C)}
+          sub="predicted"
+        />
+        <StatCard
+          S={S}
+          label="FIRST CONTACT RES."
+          value={`${overview.fcr_rate}%`}
+          color={C.green}
+          sub="resolved first time"
+        />
+        <StatCard
+          S={S}
+          label="COACHING FLAGS"
+          value={overview.calls_requiring_coaching}
+          color={C.yellow}
+          sub="calls to review"
+        />
+      </div>
+
+      <div style={S.card}>
+        <div style={S.cardTitle}>AGENT PERFORMANCE</div>
+        <table style={S.managerTable}>
+          <thead>
+            <tr>
+              {[
+                "Agent",
+                "Calls",
+                "QA Score",
+                "CSAT",
+                "FCR",
+                "Coaching Flags",
+              ].map((heading) => (
+                <th key={heading} style={S.tableHead}>
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {agents.map((agent) => (
+              <tr key={agent.id}>
+                <td style={S.tableCell}>
+                  <button
+                    style={S.tableButton}
+                    onClick={() => onOpenAgent(agent.id)}
+                  >
+                    {agent.name}
+                  </button>
+                  <div style={{ color: C.textSec, fontSize: 11, marginTop: 3 }}>
+                    {agent.team}
+                  </div>
+                </td>
+                <td style={S.tableCell}>{agent.calls}</td>
+                <td
+                  style={{
+                    ...S.tableCell,
+                    color: scoreColor(agent.qa_score / 10, C),
+                  }}
+                >
+                  {agent.qa_score}%
+                </td>
+                <td style={{ ...S.tableCell, color: csatColor(agent.csat, C) }}>
+                  {agent.csat}/5
+                </td>
+                <td style={S.tableCell}>{agent.fcr}%</td>
+                <td
+                  style={{
+                    ...S.tableCell,
+                    color: agent.coaching_flags ? C.yellow : C.textMid,
+                  }}
+                >
+                  {agent.coaching_flags}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ ...S.grid2, marginTop: 24 }}>
+        <div style={S.card}>
+          <div style={S.cardTitle}>CALL HISTORY</div>
+          <div style={S.filterRow}>
+            <select
+              style={S.select}
+              value={filters.agent_id}
+              onChange={(e) => updateFilter("agent_id", e.target.value)}
+            >
+              <option value="">All agents</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+            <select
+              style={S.select}
+              value={filters.sentiment}
+              onChange={(e) => updateFilter("sentiment", e.target.value)}
+            >
+              <option value="">All sentiment</option>
+              <option>Positive</option>
+              <option>Neutral</option>
+              <option>Negative</option>
+            </select>
+            <select
+              style={S.select}
+              value={filters.fcr}
+              onChange={(e) => updateFilter("fcr", e.target.value)}
+            >
+              <option value="">All FCR</option>
+              <option value="true">Resolved</option>
+              <option value="false">Not resolved</option>
+            </select>
+            <select
+              style={S.select}
+              value={filters.min_qa}
+              onChange={(e) => updateFilter("min_qa", e.target.value)}
+            >
+              <option value="">Any QA score</option>
+              <option value="80">80% and up</option>
+              <option value="70">70% and up</option>
+              <option value="60">60% and up</option>
+            </select>
+            <input
+              aria-label="From date"
+              type="date"
+              style={S.select}
+              value={filters.from}
+              onChange={(e) => updateFilter("from", e.target.value)}
+            />
+            <input
+              aria-label="To date"
+              type="date"
+              style={S.select}
+              value={filters.to}
+              onChange={(e) => updateFilter("to", e.target.value)}
+            />
+          </div>
+          <table style={S.managerTable}>
+            <thead>
+              <tr>
+                {["Date", "Agent", "Sentiment", "CSAT", "FCR", "QA Score"].map(
+                  (heading) => (
+                    <th key={heading} style={S.tableHead}>
+                      {heading}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {calls.slice(0, 12).map((call) => (
+                <tr key={call.id}>
+                  <td style={S.tableCell}>
+                    <button
+                      style={S.tableButton}
+                      onClick={() => onOpenCall(call.id)}
+                    >
+                      {new Date(call.call_timestamp).toLocaleDateString()}
+                    </button>
+                  </td>
+                  <td style={S.tableCell}>{call.agent_name}</td>
+                  <td
+                    style={{
+                      ...S.tableCell,
+                      color: sentimentColor(call.customer_mood, C),
+                    }}
+                  >
+                    {call.customer_mood}
+                  </td>
+                  <td style={S.tableCell}>{call.predicted_csat}/5</td>
+                  <td style={S.tableCell}>{call.fcr ? "Yes" : "No"}</td>
+                  <td style={S.tableCell}>{call.qa_score}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={S.card}>
+          <div style={S.cardTitle}>TOP COACHING OPPORTUNITIES</div>
+          {coaching.map((item) => (
+            <div
+              key={item.category}
+              style={{
+                borderBottom: `1px solid ${C.border}`,
+                padding: "13px 0",
+              }}
+            >
+              <button
+                style={S.insightButton}
+                onClick={() => toggleCategory(item.category)}
+              >
+                {item.category}
+              </button>
+              <span
+                style={{
+                  color: C.yellow,
+                  float: "right",
+                  fontFamily: mono,
+                  fontSize: 12,
+                }}
+              >
+                {item.calls} calls
+              </span>
+              {selectedCategory === item.category && (
+                <div style={{ marginTop: 12 }}>
+                  {<CoachingEvidence category={item.category} C={C} S={S} />}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function CoachingEvidence({ category, C, S }) {
+  const [items, setItems] = useState(null);
+  useEffect(() => {
+    fetch(`/api/manager/coaching/${encodeURIComponent(category)}`)
+      .then((res) => res.json())
+      .then(setItems);
+  }, [category]);
+  if (!items)
+    return (
+      <div style={{ color: C.textSec, fontSize: 12 }}>Loading evidence...</div>
+    );
+  return (
+    <div>
+      {items.slice(0, 5).map((item) => (
+        <details
+          key={`${item.call_id}-${item.insight}`}
+          style={{ color: C.textMid, fontSize: 12, marginBottom: 9 }}
+        >
+          <summary style={{ cursor: "pointer" }}>
+            {item.agent_name}: {item.insight}
+          </summary>
+          <div
+            style={{
+              background: C.surfaceHi,
+              borderRadius: 6,
+              marginTop: 7,
+              padding: 9,
+            }}
+          >
+            <strong style={{ color: C.textSec }}>Evidence:</strong>{" "}
+            {item.evidence}
+          </div>
+        </details>
+      ))}
+    </div>
+  );
+}
+
+function AgentDetail({ agentId, C, S, onBack, onOpenCall }) {
+  const [detail, setDetail] = useState(null);
+  useEffect(() => {
+    fetch(`/api/manager/agents/${agentId}`)
+      .then((res) => res.json())
+      .then(setDetail);
+  }, [agentId]);
+  if (!detail)
+    return (
+      <main style={S.main}>
+        <LoadingPulse step="Loading agent detail..." C={C} />
+      </main>
+    );
+  const { agent, metrics } = detail;
+  return (
+    <main style={S.main}>
+      <button style={S.detailBack} onClick={onBack}>
+        ← Back to manager dashboard
+      </button>
+      <div style={{ ...S.managerHeader, marginTop: 22 }}>
+        <div>
+          <div style={S.pageKicker}>AGENT PERFORMANCE</div>
+          <h1 style={S.pageTitle}>{agent.name}</h1>
+          <div style={{ color: C.textSec, marginTop: 7 }}>
+            {agent.team} · {agent.email}
+          </div>
+        </div>
+      </div>
+      <div style={S.managerGrid}>
+        <StatCard S={S} label="CALLS ANALYZED" value={metrics.calls} />
+        <StatCard
+          S={S}
+          label="AVERAGE QA SCORE"
+          value={`${metrics.qa_score}%`}
+        />
+        <StatCard S={S} label="AVERAGE CSAT" value={`${metrics.csat}/5`} />
+        <StatCard S={S} label="FCR" value={`${metrics.fcr}%`} />
+      </div>
+      <div style={S.grid2}>
+        <div style={S.card}>
+          <div style={S.cardTitle}>SENTIMENT DISTRIBUTION</div>
+          {detail.sentiment_distribution.map((item) => (
+            <div
+              key={item.sentiment}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                borderBottom: `1px solid ${C.border}`,
+                padding: "12px 0",
+              }}
+            >
+              <span style={{ color: sentimentColor(item.sentiment, C) }}>
+                {item.sentiment}
+              </span>
+              <strong>{item.count}</strong>
+            </div>
+          ))}
+        </div>
+        <div style={S.card}>
+          <div style={S.cardTitle}>QA TREND OVER TIME</div>
+          {detail.qa_trend.map((item) => (
+            <div
+              key={item.date}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "8px 0",
+                color: C.textMid,
+              }}
+            >
+              <span>{item.date}</span>
+              <span style={{ color: C.accent }}>{item.qa_score}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={S.grid2}>
+        <div style={S.card}>
+          <div style={S.cardTitle}>RECENT CALLS</div>
+          {detail.recent_calls.map((call) => (
+            <div
+              key={call.id}
+              style={{
+                borderBottom: `1px solid ${C.border}`,
+                padding: "12px 0",
+              }}
+            >
+              <button style={S.tableButton} onClick={() => onOpenCall(call.id)}>
+                {new Date(call.call_timestamp).toLocaleDateString()} ·{" "}
+                {call.customer_mood}
+              </button>
+              <div style={{ color: C.textSec, fontSize: 12, marginTop: 4 }}>
+                {call.summary}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={S.card}>
+          <div style={S.cardTitle}>COACHING OPPORTUNITIES</div>
+          {detail.coaching_opportunities.map((item, index) => (
+            <details
+              key={`${item.call_id}-${index}`}
+              style={{ color: C.textMid, fontSize: 12, marginBottom: 10 }}
+            >
+              <summary style={{ cursor: "pointer" }}>
+                {item.category}: {item.insight}
+              </summary>
+              <div
+                style={{
+                  background: C.surfaceHi,
+                  borderRadius: 6,
+                  marginTop: 7,
+                  padding: 9,
+                }}
+              >
+                <strong style={{ color: C.textSec }}>Evidence:</strong>{" "}
+                {item.evidence}
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
 // ── Main App ──────────────────────────────────────────────────────
 export default function App() {
   const [isDark, setIsDark] = useState(true);
@@ -879,7 +1476,43 @@ export default function App() {
   const [loadingStep, setLoadingStep] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const initialPath = window.location.pathname;
+  const [page, setPage] = useState(
+    initialPath === "/manager"
+      ? "manager"
+      : initialPath === "/analysis"
+        ? "analysis"
+        : "welcome",
+  );
+  const [agents, setAgents] = useState([]);
+  const [agentId, setAgentId] = useState("");
+  const [managerAgentId, setManagerAgentId] = useState(null);
+  const [managerCall, setManagerCall] = useState(null);
   const inputRef = useRef();
+
+  useEffect(() => {
+    fetch("/api/agents")
+      .then((res) => res.json())
+      .then((data) => {
+        setAgents(data);
+        if (data[0]) setAgentId(String(data[0].id));
+      })
+      .catch(() => setAgents([]));
+    const onPopState = () => {
+      const path = window.location.pathname;
+      setPage(path === "/manager" ? "manager" : path === "/analysis" ? "analysis" : "welcome");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const navigate = (nextPage) => {
+    const path = nextPage === "manager" ? "/manager" : "/analysis";
+    window.history.pushState({}, "", path);
+    setPage(nextPage);
+    setManagerAgentId(null);
+    setManagerCall(null);
+  };
 
   const handleFile = (f) => {
     if (!f) return;
@@ -900,6 +1533,7 @@ export default function App() {
     setResult(null);
     const formData = new FormData();
     formData.append("file", file);
+    if (agentId) formData.append("agent_id", agentId);
     try {
       setLoadingStep("Transcribing audio with Whisper...");
       await new Promise((r) => setTimeout(r, 1200));
@@ -920,6 +1554,13 @@ export default function App() {
     }
   };
 
+  const openAgent = (id) => setManagerAgentId(id);
+  const openCall = async (id) => {
+    const response = await fetch(`/api/manager/calls/${id}`);
+    const data = await response.json();
+    setManagerCall({ transcript: data.transcript, analysis: data.analysis });
+  };
+
   return (
     <div style={S.app}>
       {/* Topbar */}
@@ -927,6 +1568,22 @@ export default function App() {
         <div style={S.logo}>
           <span style={S.logoAccent}>Call</span>IQ
         </div>
+        {page !== "welcome" && (
+          <div style={S.nav}>
+            <button
+              style={S.navButton(page === "analysis")}
+              onClick={() => navigate("analysis")}
+            >
+              Call Analysis
+            </button>
+            <button
+              style={S.navButton(page === "manager")}
+              onClick={() => navigate("manager")}
+            >
+              Manager Dashboard
+            </button>
+          </div>
+        )}
         <div style={S.topbarRight}>
           <span style={{ fontSize: 12, color: C.textSec, fontFamily: mono }}>
             powered by groq
@@ -942,7 +1599,64 @@ export default function App() {
 
       <style>{`@keyframes workspaceReveal{0%{opacity:0;transform:translate3d(0,24px,-80px) rotateX(7deg)}100%{opacity:1;transform:translate3d(0,0,0) rotateX(0)}}@keyframes trackSweep{0%,100%{opacity:.25;transform:translateX(-3%) rotate(-12deg)}50%{opacity:.8;transform:translateX(3%) rotate(-12deg)}}@keyframes textDrift{0%,100%{transform:translate3d(0,0,0);opacity:.25}50%{transform:translate3d(24px,-10px,0);opacity:.7}}@keyframes ringTurn{from{transform:translate(-50%,-50%) rotateX(62deg) rotateZ(-18deg)}to{transform:translate(-50%,-50%) rotateX(62deg) rotateZ(342deg)}}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}@media (max-width:600px){.welcome-card{padding:32px 20px 36px!important}}`}</style>
 
-      {!file ? (
+      {page === "welcome" ? (
+        <main style={S.welcome}>
+          <div style={S.welcomeBackdrop} aria-hidden="true">
+            <div style={{ ...S.motionTrack, ...S.motionTrackTop }} />
+            <div style={{ ...S.motionTrack, ...S.motionTrackBottom }} />
+            <div style={{ ...S.motionRing, ...S.motionRingInner }} />
+            <div style={S.motionRing} />
+            <span style={{ ...S.motionText, ...S.motionTextOne }}>VOICE / SIGNAL / INSIGHT</span>
+            <span style={{ ...S.motionText, ...S.motionTextTwo }}>CALL_001 // READY</span>
+            <span style={{ ...S.motionText, ...S.motionTextThree }}>TRANSCRIBE → ANALYZE → IMPROVE</span>
+          </div>
+          <div style={S.welcomeCard}>
+            <div style={S.emptyIcon}>📞</div>
+            <h1 style={S.welcomeTitle}>Welcome to CallIQ</h1>
+            <p style={S.welcomeDesc}>
+              Choose a workspace to understand individual customer interactions or team performance.
+            </p>
+            <div style={S.welcomeModes}>
+              <button style={{ ...S.modeButton, ...S.modeAnalysis }} onClick={() => navigate("analysis")}>
+                <div style={S.modeButtonAccent}>01 / CALL-LEVEL INTELLIGENCE</div>
+                <div style={S.modeButtonTitle}>Call Analysis</div>
+                <div style={S.modeButtonDescription}>Upload a recording and review sentiment, CSAT, FCR, and coaching signals.</div>
+              </button>
+              <button style={{ ...S.modeButton, ...S.modeManager }} onClick={() => navigate("manager")}>
+                <div style={S.modeButtonAccent}>02 / MANAGER-LEVEL INTELLIGENCE</div>
+                <div style={S.modeButtonTitle}>Manager Dashboard</div>
+                <div style={S.modeButtonDescription}>Compare agent performance, review call history, and find recurring coaching needs.</div>
+              </button>
+            </div>
+          </div>
+        </main>
+      ) : page === "manager" ? (
+        managerCall ? (
+          <main style={S.main}>
+            <button style={S.detailBack} onClick={() => setManagerCall(null)}>
+              ← Back to manager dashboard
+            </button>
+            <div style={{ marginTop: 22 }}>
+              <Dashboard data={managerCall} C={C} S={S} />
+            </div>
+          </main>
+        ) : managerAgentId ? (
+          <AgentDetail
+            agentId={managerAgentId}
+            C={C}
+            S={S}
+            onBack={() => setManagerAgentId(null)}
+            onOpenCall={openCall}
+          />
+        ) : (
+          <ManagerDashboard
+            C={C}
+            S={S}
+            onOpenAgent={openAgent}
+            onOpenCall={openCall}
+          />
+        )
+      ) : !file ? (
         <main style={S.welcome}>
           <div style={S.welcomeBackdrop} aria-hidden="true">
             <div style={{ ...S.motionTrack, ...S.motionTrackTop }} />
@@ -992,6 +1706,19 @@ export default function App() {
                 onChange={(e) => handleFile(e.target.files[0])}
               />
             </div>
+            <select
+              aria-label="Assign agent"
+              style={{ ...S.select, marginTop: 14, width: "100%" }}
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+            >
+              <option value="">Select demo agent</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name} · {agent.team}
+                </option>
+              ))}
+            </select>
           </div>
         </main>
       ) : (
@@ -1003,7 +1730,7 @@ export default function App() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: C.textSec,
+                    color: C.sidebarMuted,
                     marginBottom: 12,
                     fontFamily: mono,
                   }}
@@ -1021,10 +1748,10 @@ export default function App() {
                   onClick={() => inputRef.current.click()}
                 >
                   <div style={S.uploadIcon}>🎙</div>
-                  <div style={S.uploadLabel}>
+                  <div style={S.sidebarUploadLabel}>
                     Drop a call recording here
                     <br />
-                    <span style={{ color: C.textSec, fontSize: 11 }}>
+                    <span style={{ color: C.sidebarMuted, fontSize: 11 }}>
                       .mp3 · .wav · .m4a supported
                     </span>
                   </div>
@@ -1037,6 +1764,19 @@ export default function App() {
                     onChange={(e) => handleFile(e.target.files[0])}
                   />
                 </div>
+                <select
+                  aria-label="Assign agent"
+                  style={{ ...S.select, marginTop: 14, width: "100%" }}
+                  value={agentId}
+                  onChange={(e) => setAgentId(e.target.value)}
+                >
+                  <option value="">Select demo agent</option>
+                  {agents.map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   style={{
                     ...S.uploadBtn,
@@ -1067,7 +1807,7 @@ export default function App() {
                 ].map((t) => (
                   <div
                     key={t}
-                    style={{ fontSize: 12, color: C.textSec, marginBottom: 2 }}
+                    style={{ fontSize: 12, color: C.sidebarMuted, marginBottom: 2 }}
                   >
                     <span style={{ color: C.accent }}>›</span> {t}
                   </div>

@@ -79,6 +79,24 @@ Open `http://localhost:3000` in your browser.
 
 The React development server forwards `/api` requests to the Flask API.
 
+## Manager dashboard
+
+The manager area is available at `http://localhost:3000/manager` after both servers are running. It reads its data from SQLite and includes agent performance, call history, filters, coaching opportunities, and links back to the existing call analysis view.
+
+To create the local demo dataset:
+
+```powershell
+python seed_database.py
+```
+
+This creates 40 fictional calls for the five demo agents. To recreate the dataset:
+
+```powershell
+python seed_database.py --reset
+```
+
+The database is stored at `data/calliq.db` and is intentionally ignored by Git. Successful calls processed through `/api/analyze` are added to the same database.
+
 ## Build the frontend
 
 ```powershell
@@ -101,6 +119,14 @@ curl.exe -X POST http://localhost:5000/api/analyze -F "file=@sample_calls/exampl
 ```
 
 The response includes the transcript and structured analysis data.
+
+Manager endpoints include:
+
+- `GET /api/manager/overview`
+- `GET /api/manager/agents`
+- `GET /api/manager/agents/<agent_id>`
+- `GET /api/manager/calls`
+- `GET /api/manager/calls/<call_id>`
 
 ## Notes
 

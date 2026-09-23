@@ -6,10 +6,26 @@ from groq import Groq
 from dotenv import load_dotenv
 import json
 
+from database import (
+    ensure_demo_agents,
+    get_agent_detail,
+    get_agents,
+    get_agent_performance,
+    get_call,
+    get_calls,
+    get_coaching_calls,
+    get_coaching_opportunities,
+    get_overview,
+    init_db,
+    save_analysis,
+)
+
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+init_db()
+ensure_demo_agents()
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
@@ -92,6 +108,14 @@ def analyze():
 
     file = request.files["file"]
     suffix = os.path.splitext(file.filename)[1]
+    agent_id = request.form.get("agent_id")
+    if not agent_id:
+        agents = get_agents()
+        agent_id = agents[0]["id"] if agents else None
+    try:
+        agent_id = int(agent_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "A valid agent_id is required"}), 400
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         file.save(tmp.name)
@@ -100,11 +124,59 @@ def analyze():
     try:
         transcript = transcribe_audio(tmp_path)
         analysis = analyze_call(transcript)
-        os.unlink(tmp_path)
+        save_analysis(agent_id, transcript, analysis)
         return jsonify({"transcript": transcript, "analysis": analysis})
     except Exception as e:
-        os.unlink(tmp_path)
         return jsonify({"error": str(e)}), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+@app.route("/api/agents", methods=["GET"])
+def agents():
+    return jsonify(get_agents())
+
+
+@app.route("/api/manager/overview", methods=["GET"])
+def manager_overview():
+    return jsonify(get_overview())
+
+
+@app.route("/api/manager/agents", methods=["GET"])
+def manager_agents():
+    return jsonify(get_agent_performance())
+
+
+@app.route("/api/manager/agents/<int:agent_id>", methods=["GET"])
+def manager_agent(agent_id):
+    result = get_agent_detail(agent_id)
+    if result is None:
+        return jsonify({"error": "Agent not found"}), 404
+    return jsonify(result)
+
+
+@app.route("/api/manager/calls", methods=["GET"])
+def manager_calls():
+    return jsonify(get_calls(request.args.to_dict()))
+
+
+@app.route("/api/manager/calls/<int:call_id>", methods=["GET"])
+def manager_call(call_id):
+    result = get_call(call_id)
+    if result is None:
+        return jsonify({"error": "Call not found"}), 404
+    return jsonify(result)
+
+
+@app.route("/api/manager/coaching", methods=["GET"])
+def manager_coaching():
+    return jsonify(get_coaching_opportunities())
+
+
+@app.route("/api/manager/coaching/<path:category>", methods=["GET"])
+def manager_coaching_calls(category):
+    return jsonify(get_coaching_calls(category))
 
 
 if __name__ == "__main__":

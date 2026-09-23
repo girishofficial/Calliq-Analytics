@@ -17,3 +17,6 @@ call-analytics-ui/build/
 # Local audio recordings
 sample_calls/*
 !sample_calls/.gitkeep
+
+# Local SQLite data
+data/
